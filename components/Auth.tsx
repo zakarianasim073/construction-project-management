@@ -78,10 +78,10 @@ const Auth: React.FC<AuthProps> = ({ onUserChange }) => {
             
             <div className="grid grid-cols-1 gap-3">
               {[
-                { role: 'DIRECTOR', icon: <ShieldCheck className="w-5 h-5" />, desc: 'Full control and oversight' },
-                { role: 'MANAGER', icon: <Briefcase className="w-5 h-5" />, desc: 'Project planning and execution' },
-                { role: 'ENGINEER', icon: <Construction className="w-5 h-5" />, desc: 'Site operations and DPRs' },
-                { role: 'ACCOUNTANT', icon: <Calculator className="w-5 h-5" />, desc: 'Financial tracking and bills' }
+                { role: 'ADMIN', icon: <ShieldCheck className="w-5 h-5" />, desc: 'Full control and oversight' },
+                { role: 'PROJECT_MANAGER', icon: <Briefcase className="w-5 h-5" />, desc: 'Project planning and execution' },
+                { role: 'CONTRIBUTOR', icon: <Construction className="w-5 h-5" />, desc: 'Site operations and DPRs' },
+                { role: 'VIEWER', icon: <Calculator className="w-5 h-5" />, desc: 'Read-only access to data' }
               ].map((item) => (
                 <button
                   key={item.role}
@@ -93,7 +93,7 @@ const Auth: React.FC<AuthProps> = ({ onUserChange }) => {
                     {item.icon}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800">{item.role}</p>
+                    <p className="font-bold text-slate-800">{item.role.replace('_', ' ')}</p>
                     <p className="text-xs text-slate-500">{item.desc}</p>
                   </div>
                 </button>

@@ -10,7 +10,7 @@ export enum Unit {
   TON = 'TON'
 }
 
-export type UserRole = 'DIRECTOR' | 'MANAGER' | 'ACCOUNTANT' | 'ENGINEER';
+export type UserRole = 'ADMIN' | 'PROJECT_MANAGER' | 'VIEWER' | 'CONTRIBUTOR';
 export type Priority = 'LOW' | 'MEDIUM' | 'HIGH';
 
 export interface User {
@@ -19,6 +19,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   email?: string;
+  permissions?: string[]; // Global permissions
 }
 
 export interface ProjectMember {
@@ -27,6 +28,7 @@ export interface ProjectMember {
   role: UserRole;
   avatar?: string;
   joinedAt: string;
+  permissions?: string[]; // Project-specific permissions
 }
 
 export interface CostBreakdown {
@@ -237,6 +239,16 @@ export interface AiSuggestion {
   status: 'PENDING' | 'APPLIED' | 'DISMISSED';
 }
 
+export interface ProjectVersion {
+  id: string;
+  projectId: string;
+  versionName: string;
+  snapshot: ProjectState;
+  createdBy: string;
+  createdAt: string;
+  notes?: string;
+}
+
 export interface ProjectState {
   id: string;
   name: string;
@@ -261,6 +273,84 @@ export interface ProjectState {
   qualityChecks?: QualityCheck[];
   safetyChecks?: SafetyCheck[];
   photoLogs?: PhotoLog[];
+  equipment?: Equipment[];
+  attendance?: AttendanceRecord[];
+  changeOrders?: ChangeOrder[];
+  weatherForecast?: WeatherData[];
+  riskAssessments?: RiskAssessment[];
+  wasteLogs?: WasteLog[];
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  type: string;
+  status: 'OPERATIONAL' | 'MAINTENANCE' | 'BREAKDOWN';
+  operatorName?: string;
+  fuelConsumption: number; // Liters per hour
+  lastMaintenanceDate: string;
+  nextMaintenanceDate: string;
+  location: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  workerId: string;
+  workerName: string;
+  date: string;
+  checkIn: string;
+  checkOut?: string;
+  status: 'PRESENT' | 'ABSENT' | 'LEAVE';
+}
+
+export interface ChangeOrder {
+  id: string;
+  title: string;
+  description: string;
+  requestedBy: string;
+  requestedDate: string;
+  estimatedCost: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  approvedBy?: string;
+  approvedDate?: string;
+  linkedBoqId?: string;
+}
+
+export interface WeatherData {
+  date: string;
+  temp: number;
+  condition: string;
+  precipitationProbability: number;
+  windSpeed: number;
+  impactLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+  suggestedAction?: string;
+}
+
+export interface RiskAssessment {
+  id: string;
+  date: string;
+  riskScore: number; // 0-100
+  category: 'WEATHER' | 'SUPPLY_CHAIN' | 'LABOR' | 'FINANCIAL' | 'TECHNICAL';
+  description: string;
+  mitigationStrategy: string;
+  status: 'OPEN' | 'MITIGATED' | 'CLOSED';
+}
+
+export interface WasteLog {
+  id: string;
+  materialId: string;
+  qty: number;
+  reason: string;
+  date: string;
+  carbonFootprintEstimate: number; // kg CO2
+}
+
+export interface VendorRating {
+  vendorName: string;
+  deliveryScore: number; // 1-5
+  qualityScore: number; // 1-5
+  priceScore: number; // 1-5
+  overallRating: number;
 }
 
 export interface ExtractedMaterial {

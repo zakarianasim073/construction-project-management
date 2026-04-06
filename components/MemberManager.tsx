@@ -270,10 +270,10 @@ const MemberManager: React.FC<MemberManagerProps> = ({ projectId, ownerUid, curr
                       onChange={(e) => handleUpdateRole(member.uid, e.target.value as UserRole)}
                       className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border-none outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
                     >
-                      <option value="DIRECTOR">Project Director</option>
-                      <option value="MANAGER">Project Manager</option>
-                      <option value="ENGINEER">Site Engineer</option>
-                      <option value="ACCOUNTANT">Accountant</option>
+                      <option value="ADMIN">Administrator</option>
+                      <option value="PROJECT_MANAGER">Project Manager</option>
+                      <option value="CONTRIBUTOR">Contributor</option>
+                      <option value="VIEWER">Viewer</option>
                     </select>
                   ) : (
                     <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">

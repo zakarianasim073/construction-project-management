@@ -25,10 +25,10 @@ const SiteExecution: React.FC<SiteExecutionProps> = ({ data, onAddDocument, onAd
   const [tempRemarks, setTempRemarks] = useState('');
   const [storeView, setStoreView] = useState<'INVENTORY' | 'HISTORY'>('INVENTORY');
   
-  const canAddDPR = userRole === 'ENGINEER' || userRole === 'DIRECTOR';
-  const canUploadDoc = userRole === 'ENGINEER' || userRole === 'DIRECTOR';
-  const canManageStore = userRole === 'ENGINEER' || userRole === 'MANAGER' || userRole === 'DIRECTOR';
-  const isDirector = userRole === 'DIRECTOR';
+  const canAddDPR = userRole === 'CONTRIBUTOR' || userRole === 'ADMIN' || userRole === 'PROJECT_MANAGER';
+  const canUploadDoc = userRole === 'CONTRIBUTOR' || userRole === 'ADMIN' || userRole === 'PROJECT_MANAGER';
+  const canManageStore = userRole === 'CONTRIBUTOR' || userRole === 'PROJECT_MANAGER' || userRole === 'ADMIN';
+  const isDirector = userRole === 'ADMIN';
 
   // DPR Form State
   const [activityDate, setActivityDate] = useState(new Date().toISOString().split('T')[0]);

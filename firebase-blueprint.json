@@ -8,7 +8,7 @@
         "uid": { "type": "string", "description": "Firebase Auth UID" },
         "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
-        "role": { "type": "string", "enum": ["DIRECTOR", "MANAGER", "ACCOUNTANT", "ENGINEER"] },
+        "role": { "type": "string", "enum": ["ADMIN", "PROJECT_MANAGER", "VIEWER", "CONTRIBUTOR"] },
         "avatar": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
@@ -38,11 +38,26 @@
       "properties": {
         "uid": { "type": "string" },
         "name": { "type": "string" },
-        "role": { "type": "string", "enum": ["DIRECTOR", "MANAGER", "ACCOUNTANT", "ENGINEER"] },
+        "role": { "type": "string", "enum": ["ADMIN", "PROJECT_MANAGER", "VIEWER", "CONTRIBUTOR"] },
         "avatar": { "type": "string" },
         "joinedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "name", "role"]
+    },
+    "ProjectVersion": {
+      "title": "Project Version",
+      "description": "Snapshot of a project at a specific time",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "versionName": { "type": "string" },
+        "snapshot": { "type": "object", "description": "Full ProjectState object" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "projectId", "versionName", "snapshot", "createdBy", "createdAt"]
     },
     "Task": {
       "title": "Task",
@@ -99,6 +114,7 @@
     "/projects/{projectId}/members/{memberUid}": { "schema": "ProjectMember", "description": "Project members and their roles" },
     "/projects/{projectId}/tasks/{taskId}": { "schema": "Task", "description": "Project tasks" },
     "/projects/{projectId}/documents/{docId}": { "schema": "ProjectDocument", "description": "Project documents" },
+    "/projects/{projectId}/versions/{versionId}": { "schema": "ProjectVersion", "description": "Project snapshots/versions" },
     "/projects/{projectId}/comments/{commentId}": { "schema": "Comment", "description": "Comments on project entities" },
     "/users/{uid}/notifications/{notifId}": { "schema": "Notification", "description": "User-specific notifications" }
   }

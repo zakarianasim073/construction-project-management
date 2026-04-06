@@ -67,7 +67,7 @@ const MasterControl: React.FC<MasterControlProps> = ({ data, onAddDocument, onAd
   const [editEqp, setEditEqp] = useState<string>('0');
   const [editOH, setEditOH] = useState<string>('0');
 
-  const canEditBOQ = userRole === 'DIRECTOR' || userRole === 'MANAGER';
+  const canEditBOQ = userRole === 'ADMIN' || userRole === 'PROJECT_MANAGER';
 
   // Form State for Adding Item
   const [description, setDescription] = useState('');

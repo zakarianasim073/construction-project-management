@@ -202,6 +202,30 @@ export const MOCK_PROJECTS: ProjectState[] = [
     photoLogs: [
       { id: 'PH-01', url: 'https://picsum.photos/seed/const1/800/600', caption: 'Foundation pouring at Section A', location: 'Section A', uploadedBy: 'system', createdAt: '2025-04-01T10:00:00Z', tags: ['foundation', 'concrete'] },
       { id: 'PH-02', url: 'https://picsum.photos/seed/const2/800/600', caption: 'Material delivery - Cement', location: 'Main Store', uploadedBy: 'system', createdAt: '2025-04-05T14:30:00Z', tags: ['delivery', 'cement'] }
+    ],
+    equipment: [
+      { id: 'EQ-01', name: 'Caterpillar Excavator 320', type: 'Excavator', status: 'OPERATIONAL', operatorName: 'Rahim Uddin', fuelConsumption: 18, lastMaintenanceDate: '2025-03-01', nextMaintenanceDate: '2025-06-01', location: 'River Bank' },
+      { id: 'EQ-02', name: 'Concrete Mixer Truck', type: 'Mixer', status: 'MAINTENANCE', operatorName: 'Karim Ali', fuelConsumption: 12, lastMaintenanceDate: '2025-04-01', nextMaintenanceDate: '2025-04-15', location: 'Casting Yard' }
+    ],
+    attendance: [
+      { id: 'ATT-01', workerId: 'W-101', workerName: 'Abul Kashem', date: '2025-04-06', checkIn: '08:00 AM', status: 'PRESENT' },
+      { id: 'ATT-02', workerId: 'W-102', workerName: 'Sujon Mia', date: '2025-04-06', checkIn: '08:15 AM', status: 'PRESENT' },
+      { id: 'ATT-03', workerId: 'W-103', workerName: 'Nurul Islam', date: '2025-04-06', checkIn: '08:05 AM', status: 'LEAVE' }
+    ],
+    changeOrders: [
+      { id: 'CO-01', title: 'Additional River Bank Protection', description: 'Extra 50m of geo-bag dumping due to unexpected erosion', requestedBy: 'Site Engineer', requestedDate: '2025-04-02', estimatedCost: 450000, status: 'PENDING', linkedBoqId: '40-370-20' }
+    ],
+    weatherForecast: [
+      { date: '2025-04-07', temp: 32, condition: 'Thunderstorm', precipitationProbability: 85, windSpeed: 25, impactLevel: 'HIGH', suggestedAction: 'Reschedule concrete pouring and secure loose materials.' },
+      { date: '2025-04-08', temp: 30, condition: 'Cloudy', precipitationProbability: 20, windSpeed: 10, impactLevel: 'LOW' }
+    ],
+    riskAssessments: [
+      { id: 'RSK-01', date: '2025-04-06', riskScore: 75, category: 'WEATHER', description: 'Upcoming monsoon season starting earlier than predicted.', mitigationStrategy: 'Accelerate foundation work and stock up on essential materials before river levels rise.', status: 'OPEN' },
+      { id: 'RSK-02', date: '2025-04-06', riskScore: 45, category: 'SUPPLY_CHAIN', description: 'Potential shortage of Sylhet Sand due to local transport strike.', mitigationStrategy: 'Identify alternative suppliers and increase current stock levels.', status: 'OPEN' }
+    ],
+    wasteLogs: [
+      { id: 'WST-01', materialId: 'MAT-01', qty: 15, reason: 'Bag damage during unloading', date: '2025-04-05', carbonFootprintEstimate: 120 },
+      { id: 'WST-02', materialId: 'MAT-04', qty: 50, reason: 'Cutting wastage', date: '2025-04-04', carbonFootprintEstimate: 45 }
     ]
   },
   {
@@ -222,6 +246,12 @@ export const MOCK_PROJECTS: ProjectState[] = [
     liabilities: [],
     milestones: [],
     documents: [],
-    aiSuggestions: []
+    aiSuggestions: [],
+    equipment: [],
+    attendance: [],
+    changeOrders: [],
+    weatherForecast: [],
+    riskAssessments: [],
+    wasteLogs: []
   }
 ];

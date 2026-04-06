@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SubContractor, DPR } from '../types';
+import { SubContractor, DPR, UserRole } from '../types';
 import { 
   Users, 
   Search, 
@@ -18,10 +18,13 @@ import {
 interface SubcontractorPortalProps {
   subContractors: SubContractor[];
   dprs: DPR[];
+  userRole: UserRole;
 }
 
-const SubcontractorPortal: React.FC<SubcontractorPortalProps> = ({ subContractors, dprs }) => {
+const SubcontractorPortal: React.FC<SubcontractorPortalProps> = ({ subContractors, dprs, userRole }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  const canAdd = userRole === 'ADMIN' || userRole === 'PROJECT_MANAGER';
 
   const filteredSubContractors = subContractors.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -48,10 +51,12 @@ const SubcontractorPortal: React.FC<SubcontractorPortalProps> = ({ subContractor
             <Filter className="w-5 h-5" />
           </button>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-          <Plus className="w-4 h-4" />
-          Add Sub-contractor
-        </button>
+        {canAdd && (
+          <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+            <Plus className="w-4 h-4" />
+            Add Sub-contractor
+          </button>
+        )}
       </div>
 
       {/* Subcontractor Cards */}

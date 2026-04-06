@@ -540,7 +540,7 @@ export const parseBOQDocument = async (
     Return a list of items found with:
     - id (if present, otherwise generate a placeholder like "ITEM-01")
     - description
-    - unit (CUM, SQM, NOS, KG, RMT, CFT)
+    - unit (SQM, CUM, KG, NOS, RMT, CFT, BAG, TON)
     - rate (selling rate)
     - qty (planned quantity)
     
@@ -587,7 +587,7 @@ export const parseBOQDocument = async (
         return {
             id: i.id || `NEW-${Math.random().toString(36).substr(2,4)}`,
             description: i.description || "New Item",
-            unit: i.unit || 'NOS',
+            unit: (i.unit || 'NOS') as any,
             rate: rate,
             plannedQty: Number(i.qty),
             executedQty: 0,
@@ -603,6 +603,65 @@ export const parseBOQDocument = async (
     });
   } catch (error) {
     console.error("BOQ Parse error:", error);
+    return [];
+  }
+};
+
+export const generateRiskAssessment = async (projectData: ProjectState): Promise<any[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+  const prompt = `
+    Analyze the following construction project data and predict potential risks.
+    
+    Project: ${projectData.name}
+    DPRs: ${projectData.dprs.length} records
+    BOQ Items: ${projectData.boq.length} items
+    Weather Forecast: ${JSON.stringify(projectData.weatherForecast || [])}
+    
+    Consider:
+    1. Historical delays in DPRs.
+    2. Upcoming weather impacts (e.g., rain affecting concrete or excavation).
+    3. Supply chain status (based on Purchase Orders).
+    4. Financial health (Bills vs Liabilities).
+    
+    Return a JSON array of RiskAssessment objects with fields:
+    - id: string
+    - date: string (current date)
+    - riskScore: number (0-100)
+    - category: 'WEATHER' | 'SUPPLY_CHAIN' | 'LABOR' | 'FINANCIAL' | 'TECHNICAL'
+    - description: string
+    - mitigationStrategy: string
+    - status: 'OPEN'
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              date: { type: Type.STRING },
+              riskScore: { type: Type.NUMBER },
+              category: { type: Type.STRING },
+              description: { type: Type.STRING },
+              mitigationStrategy: { type: Type.STRING },
+              status: { type: Type.STRING }
+            },
+            required: ["id", "date", "riskScore", "category", "description", "mitigationStrategy", "status"]
+          }
+        }
+      }
+    });
+
+    return JSON.parse(response.text || "[]");
+  } catch (error) {
+    console.error("Risk Assessment error:", error);
     return [];
   }
 };

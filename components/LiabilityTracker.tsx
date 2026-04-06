@@ -15,7 +15,7 @@ const LiabilityTracker: React.FC<LiabilityTrackerProps> = ({ data, onAddDocument
   const poTotal = data.liabilities.filter(l => l.type === 'PENDING_PO').reduce((s, l) => s + l.amount, 0);
   const unbilledTotal = data.liabilities.filter(l => l.type === 'UNBILLED_WORK').reduce((s, l) => s + l.amount, 0);
 
-  const canEdit = userRole === 'DIRECTOR' || userRole === 'ACCOUNTANT';
+  const canEdit = userRole === 'ADMIN' || userRole === 'CONTRIBUTOR' || userRole === 'PROJECT_MANAGER';
 
   return (
     <div className="space-y-6">

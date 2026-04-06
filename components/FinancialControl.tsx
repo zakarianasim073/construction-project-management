@@ -31,10 +31,10 @@ const FinancialControl: React.FC<FinancialControlProps> = ({ data, onAddDocument
   const [aiAutofilled, setAiAutofilled] = useState(false);
   const [detectedBillDocName, setDetectedBillDocName] = useState('');
 
-  const canAddClientBill = userRole === 'MANAGER' || userRole === 'DIRECTOR';
-  const canAddVendorBill = userRole === 'ACCOUNTANT' || userRole === 'DIRECTOR';
+  const canAddClientBill = userRole === 'PROJECT_MANAGER' || userRole === 'ADMIN';
+  const canAddVendorBill = userRole === 'CONTRIBUTOR' || userRole === 'ADMIN';
   const canUploadDoc = canAddClientBill || canAddVendorBill;
-  const isDirector = userRole === 'DIRECTOR';
+  const isDirector = userRole === 'ADMIN';
 
   const clientBills = data.bills.filter(b => b.type === 'CLIENT_RA');
   const vendorBills = data.bills.filter(b => b.type === 'VENDOR_INVOICE' || b.type === 'MATERIAL_EXPENSE' || b.type === 'SUB_CONTRACTOR');

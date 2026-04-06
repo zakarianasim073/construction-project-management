@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Material, PurchaseOrder, Unit } from '../types';
+import { Material, PurchaseOrder, Unit, UserRole } from '../types';
 import { 
   Plus, 
   Search, 
@@ -18,11 +18,14 @@ import {
 interface ProcurementProps {
   materials: Material[];
   purchaseOrders: PurchaseOrder[];
+  userRole: UserRole;
 }
 
-const Procurement: React.FC<ProcurementProps> = ({ materials, purchaseOrders }) => {
+const Procurement: React.FC<ProcurementProps> = ({ materials, purchaseOrders, userRole }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'INVENTORY' | 'ORDERS'>('INVENTORY');
+
+  const canAdd = userRole === 'ADMIN' || userRole === 'PROJECT_MANAGER' || userRole === 'CONTRIBUTOR';
 
   const filteredMaterials = materials.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredOrders = purchaseOrders.filter(o => o.vendorName.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -69,10 +72,12 @@ const Procurement: React.FC<ProcurementProps> = ({ materials, purchaseOrders }) 
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
-            <Plus className="w-4 h-4" />
-            {activeTab === 'INVENTORY' ? 'Add Material' : 'New Order'}
-          </button>
+          {canAdd && (
+            <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+              <Plus className="w-4 h-4" />
+              {activeTab === 'INVENTORY' ? 'Add Material' : 'New Order'}
+            </button>
+          )}
         </div>
       </div>
 

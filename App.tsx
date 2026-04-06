@@ -18,6 +18,16 @@ import SubcontractorPortal from './components/SubcontractorPortal';
 import QCSafety from './components/QCSafety';
 import Reporting from './components/Reporting';
 import PhotoLogs from './components/PhotoLogs';
+import ProjectVersions from './components/ProjectVersions';
+import { EquipmentManagement } from './components/EquipmentManagement';
+import { AttendanceManagement } from './components/AttendanceManagement';
+import { RiskAssessmentDashboard } from './components/RiskAssessmentDashboard';
+import { WeatherImpact } from './components/WeatherImpact';
+import { ChangeOrderManagement } from './components/ChangeOrderManagement';
+import { SustainabilityTracker } from './components/SustainabilityTracker';
+import { ClientPortal } from './components/ClientPortal';
+import { VendorPerformance } from './components/VendorPerformance';
+import { BIMViewer } from './components/BIMViewer';
 import { CommentSection } from './components/Collaboration';
 import { MOCK_PROJECTS } from './constants';
 import { ProjectState, ProjectDocument, DPR, UserRole, BOQItem, AiSuggestion, Material, Bill, ExtractedDPR, User, Task } from './types';
@@ -84,13 +94,28 @@ const App: React.FC = () => {
         purchaseOrders: doc.data().purchaseOrders || [],
         qualityChecks: doc.data().qualityChecks || [],
         safetyChecks: doc.data().safetyChecks || [],
-        photoLogs: doc.data().photoLogs || []
+        photoLogs: doc.data().photoLogs || [],
+        equipment: doc.data().equipment || [],
+        attendance: doc.data().attendance || [],
+        changeOrders: doc.data().changeOrders || [],
+        weatherForecast: doc.data().weatherForecast || [],
+        riskAssessments: doc.data().riskAssessments || [],
+        wasteLogs: doc.data().wasteLogs || []
       })) as ProjectState[];
       
       if (fetchedProjects.length === 0 && projects.length === 0) {
         // Seed with mock data if empty
         MOCK_PROJECTS.forEach(async (p) => {
-          await setDoc(doc(db, 'projects', p.id), { ...p, ownerUid: user.uid });
+          const projectData = { ...p, ownerUid: user.uid, memberUids: [user.uid] };
+          await setDoc(doc(db, 'projects', p.id), projectData);
+          
+          // Add owner as admin member
+          await setDoc(doc(db, 'projects', p.id, 'members', user.uid), {
+            uid: user.uid,
+            name: user.name,
+            role: 'ADMIN',
+            joinedAt: new Date().toISOString()
+          });
         });
       } else {
         setProjects(fetchedProjects);
@@ -182,7 +207,13 @@ const App: React.FC = () => {
       boq: [],
       bills: [],
       liabilities: [],
-      milestones: []
+      milestones: [],
+      equipment: [],
+      attendance: [],
+      changeOrders: [],
+      weatherForecast: [],
+      riskAssessments: [],
+      wasteLogs: []
     };
     
     try {
@@ -254,11 +285,44 @@ const App: React.FC = () => {
   };
 
   const handleImportBOQItems = (items: BOQItem[]) => {
-     if (!activeProjectId) return;
-     handleUpdateProject(activeProjectId, (project) => ({
-       ...project,
-       boq: [...project.boq, ...items] // Append new items. In real app, this might merge or replace.
-     }));
+     if (!activeProjectId || !activeProject) return;
+     handleUpdateProject(activeProjectId, (project) => {
+       const existingIds = new Set(project.boq.map(item => item.id));
+       const newItems = items.filter(item => !existingIds.has(item.id));
+       const updatedBoq = project.boq.map(existingItem => {
+         const importMatch = items.find(item => item.id === existingItem.id);
+         if (importMatch) {
+           // Merge: Update planned quantities and rates if they differ
+           return {
+             ...existingItem,
+             description: importMatch.description || existingItem.description,
+             rate: importMatch.rate || existingItem.rate,
+             plannedQty: importMatch.plannedQty || existingItem.plannedQty,
+             unit: importMatch.unit || existingItem.unit,
+             plannedUnitCost: importMatch.plannedUnitCost || existingItem.plannedUnitCost,
+             plannedBreakdown: importMatch.plannedBreakdown || existingItem.plannedBreakdown
+           };
+         }
+         return existingItem;
+       });
+
+       return {
+         ...project,
+         boq: [...updatedBoq, ...newItems]
+       };
+     });
+  };
+
+  const handleRestoreVersion = async (snapshot: ProjectState) => {
+    if (!activeProjectId) return;
+    try {
+      await updateDoc(doc(db, 'projects', activeProjectId), snapshot as any);
+      // Also need to handle subcollections if they were part of the snapshot, 
+      // but here ProjectState contains the arrays, so it's fine for the main fields.
+      // For a real production app, we'd need to be more careful with subcollections.
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `projects/${activeProjectId}`);
+    }
   };
 
   const handleApplySuggestion = async (suggestionId: string) => {
@@ -580,6 +644,7 @@ const App: React.FC = () => {
             data={activeProject} 
             onApplySuggestion={handleApplySuggestion}
             onDismissSuggestion={handleDismissSuggestion}
+            onTabChange={setActiveTab}
           />
         );
       case 'master':
@@ -613,9 +678,27 @@ const App: React.FC = () => {
       case 'analytics':
         return <FinancialAnalytics boq={activeProject.boq} bills={activeProject.bills} />;
       case 'procurement':
-        return <Procurement materials={activeProject.materials} purchaseOrders={activeProject.purchaseOrders || []} />;
+        return <Procurement materials={activeProject.materials} purchaseOrders={activeProject.purchaseOrders || []} userRole={activeProjectRole || user.role} />;
       case 'subcontractors':
-        return <SubcontractorPortal subContractors={activeProject.subContractors} dprs={activeProject.dprs} />;
+        return <SubcontractorPortal subContractors={activeProject.subContractors} dprs={activeProject.dprs} userRole={activeProjectRole || user.role} />;
+      case 'equipment':
+        return <EquipmentManagement project={activeProject} onUpdateEquipment={(equipment) => handleUpdateProject(activeProject.id, (p) => ({ ...p, equipment }))} />;
+      case 'attendance':
+        return <AttendanceManagement project={activeProject} onUpdateAttendance={(attendance) => handleUpdateProject(activeProject.id, (p) => ({ ...p, attendance }))} />;
+      case 'risks':
+        return <RiskAssessmentDashboard project={activeProject} onUpdateRisks={(riskAssessments) => handleUpdateProject(activeProject.id, (p) => ({ ...p, riskAssessments }))} />;
+      case 'weather':
+        return <WeatherImpact project={activeProject} />;
+      case 'change-orders':
+        return <ChangeOrderManagement project={activeProject} onUpdateChangeOrders={(changeOrders) => handleUpdateProject(activeProject.id, (p) => ({ ...p, changeOrders }))} />;
+      case 'sustainability':
+        return <SustainabilityTracker project={activeProject} onUpdateWaste={(wasteLogs) => handleUpdateProject(activeProject.id, (p) => ({ ...p, wasteLogs }))} />;
+      case 'vendor-performance':
+        return <VendorPerformance project={activeProject} />;
+      case 'bim':
+        return <BIMViewer project={activeProject} />;
+      case 'client-portal':
+        return <ClientPortal project={activeProject} />;
       case 'qc-safety':
         return <QCSafety qualityChecks={activeProject.qualityChecks || []} safetyChecks={activeProject.safetyChecks || []} users={activeProjectMembers} />;
       case 'gantt':
@@ -624,6 +707,15 @@ const App: React.FC = () => {
         return <PhotoLogs photoLogs={activeProject.photoLogs || []} users={activeProjectMembers} />;
       case 'reports':
         return <Reporting project={activeProject} />;
+      case 'versions':
+        return (
+          <ProjectVersions 
+            projectId={activeProject.id} 
+            currentProject={activeProject} 
+            userRole={activeProjectRole || user.role}
+            onRestore={handleRestoreVersion}
+          />
+        );
       case 'liability':
         return <LiabilityTracker data={activeProject} onAddDocument={handleAddDocument} userRole={activeProjectRole || user.role} />;
       case 'documents':
@@ -636,7 +728,7 @@ const App: React.FC = () => {
                 onAnalyzeDocument={handleAnalyzeDocument}
                 onSelectDocument={setSelectedDocId}
                 boqItems={activeProject.boq}
-                allowUpload={(activeProjectRole || user.role) === 'DIRECTOR' || (activeProjectRole || user.role) === 'MANAGER' || (activeProjectRole || user.role) === 'ENGINEER'}
+                allowUpload={(activeProjectRole || user.role) === 'ADMIN' || (activeProjectRole || user.role) === 'PROJECT_MANAGER' || (activeProjectRole || user.role) === 'CONTRIBUTOR'}
               />
             </div>
             {selectedDocId && (
@@ -671,7 +763,14 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        return <Dashboard data={activeProject} onApplySuggestion={handleApplySuggestion} onDismissSuggestion={handleDismissSuggestion} />;
+        return (
+          <Dashboard 
+            data={activeProject} 
+            onApplySuggestion={handleApplySuggestion} 
+            onDismissSuggestion={handleDismissSuggestion} 
+            onTabChange={setActiveTab}
+          />
+        );
     }
   };
 

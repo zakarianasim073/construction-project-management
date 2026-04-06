@@ -42,8 +42,8 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'DIRECTOR' ||
-         (request.auth.token.email == "z.nasim073@gmail.com" && request.auth.token.email_verified == true));
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+         (request.auth.token.email == "zmnasim73@gmail.com" && request.auth.token.email_verified == true));
     }
 
     function isProjectMember(projectId) {
@@ -51,12 +51,28 @@ service cloud.firestore {
       return isAuthenticated() && (request.auth.uid in project.memberUids || project.ownerUid == request.auth.uid);
     }
 
+    function getProjectMemberRole(projectId) {
+      return get(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid)).data.role;
+    }
+
     function isProjectAdmin(projectId) {
       let project = get(/databases/$(database)/documents/projects/$(projectId)).data;
       return isAuthenticated() && (
         project.ownerUid == request.auth.uid || 
-        get(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid)).data.role in ['DIRECTOR', 'MANAGER']
+        getProjectMemberRole(projectId) == 'ADMIN' ||
+        getProjectMemberRole(projectId) == 'PROJECT_MANAGER'
       );
+    }
+
+    function isProjectContributor(projectId) {
+      return isProjectMember(projectId) && (
+        isProjectAdmin(projectId) || 
+        getProjectMemberRole(projectId) == 'CONTRIBUTOR'
+      );
+    }
+
+    function isProjectViewer(projectId) {
+      return isProjectMember(projectId);
     }
 
     function hasRequiredFields(fields) {
@@ -78,32 +94,40 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if isAuthenticated() && (request.auth.uid in resource.data.memberUids || resource.data.ownerUid == request.auth.uid);
+      allow read: if isProjectViewer(projectId);
       allow create: if isAuthenticated() && hasRequiredFields(['id', 'name', 'status', 'ownerUid', 'memberUids']);
-      allow update: if isAuthenticated() && (resource.data.ownerUid == request.auth.uid || isProjectAdmin(projectId));
-      allow delete: if isAuthenticated() && resource.data.ownerUid == request.auth.uid;
+      allow update: if isProjectAdmin(projectId);
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.ownerUid == request.auth.uid);
 
       match /members/{memberUid} {
-        allow read: if isProjectMember(projectId);
+        allow read: if isProjectViewer(projectId);
         allow write: if isProjectAdmin(projectId);
       }
 
       match /tasks/{taskId} {
-        allow read: if isProjectMember(projectId);
-        allow create: if isProjectMember(projectId) && hasRequiredFields(['id', 'projectId', 'title', 'status']);
-        allow update, delete: if isProjectMember(projectId);
+        allow read: if isProjectViewer(projectId);
+        allow create: if isProjectContributor(projectId) && hasRequiredFields(['id', 'projectId', 'title', 'status']);
+        allow update: if isProjectContributor(projectId);
+        allow delete: if isProjectAdmin(projectId);
       }
 
       match /documents/{docId} {
-        allow read: if isProjectMember(projectId);
-        allow create: if isProjectMember(projectId) && hasRequiredFields(['id', 'name', 'type', 'category', 'module']);
-        allow update, delete: if isProjectMember(projectId);
+        allow read: if isProjectViewer(projectId);
+        allow create: if isProjectContributor(projectId) && hasRequiredFields(['id', 'name', 'type', 'category', 'module']);
+        allow update: if isProjectContributor(projectId);
+        allow delete: if isProjectAdmin(projectId);
+      }
+
+      match /versions/{versionId} {
+        allow read: if isProjectViewer(projectId);
+        allow create: if isProjectAdmin(projectId) && hasRequiredFields(['id', 'projectId', 'versionName', 'snapshot', 'createdBy', 'createdAt']);
+        allow update, delete: if isProjectAdmin(projectId);
       }
 
       match /comments/{commentId} {
-        allow read: if isProjectMember(projectId);
-        allow create: if isProjectMember(projectId) && hasRequiredFields(['id', 'targetId', 'targetType', 'authorUid', 'text']);
-        allow update, delete: if isProjectMember(projectId) && (request.auth.uid == resource.data.authorUid || isProjectAdmin(projectId));
+        allow read: if isProjectViewer(projectId);
+        allow create: if isProjectContributor(projectId) && hasRequiredFields(['id', 'targetId', 'targetType', 'authorUid', 'text']);
+        allow update, delete: if isProjectContributor(projectId) && (request.auth.uid == resource.data.authorUid || isProjectAdmin(projectId));
       }
     }
 

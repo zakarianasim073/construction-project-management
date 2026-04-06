@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Calendar,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  FileText
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { generateProjectInsights } from '../services/geminiService';
@@ -26,6 +27,7 @@ interface DashboardProps {
   data: ProjectState;
   onApplySuggestion: (suggestionId: string) => void;
   onDismissSuggestion: (suggestionId: string) => void;
+  onTabChange: (tab: string) => void;
 }
 
 // Helper for Gantt Chart
@@ -221,7 +223,7 @@ const ProjectGantt: React.FC<{ data: ProjectState }> = ({ data }) => {
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ data, onApplySuggestion, onDismissSuggestion }) => {
+const Dashboard: React.FC<DashboardProps> = ({ data, onApplySuggestion, onDismissSuggestion, onTabChange }) => {
   const [insight, setInsight] = useState<string | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
 
@@ -349,6 +351,24 @@ const Dashboard: React.FC<DashboardProps> = ({ data, onApplySuggestion, onDismis
                     </div>
                 </div>
                 <p className="text-xs text-slate-400 mt-4">Pending + Retention</p>
+                </div>
+
+                <div 
+                  onClick={() => onTabChange('reporting')}
+                  className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between group cursor-pointer hover:border-indigo-300 transition-all"
+                >
+                  <div className="flex justify-between items-start">
+                      <div>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Reports</p>
+                      <h3 className="text-2xl font-bold text-slate-800 mt-1">5</h3>
+                      </div>
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                      <FileText className="w-5 h-5" />
+                      </div>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-4 flex items-center gap-1 group-hover:text-indigo-600 transition-colors">
+                    Generate project PDFs <ChevronRight className="w-3 h-3" />
+                  </p>
                 </div>
             </div>
 

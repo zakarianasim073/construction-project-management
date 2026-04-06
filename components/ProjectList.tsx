@@ -27,7 +27,7 @@ const ProjectList: React.FC<ProjectListProps> = ({ projects, onSelectProject, on
   const [contractValue, setContractValue] = useState('');
   const [priority, setPriority] = useState<Priority>('MEDIUM');
 
-  const canCreateProject = userRole === 'DIRECTOR';
+  const canCreateProject = userRole === 'ADMIN';
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +52,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ projects, onSelectProject, on
 
   const getRoleLabel = (role: UserRole) => {
     switch(role) {
-      case 'DIRECTOR': return 'Project Director';
-      case 'MANAGER': return 'Project Manager';
-      case 'ENGINEER': return 'Site Engineer';
-      case 'ACCOUNTANT': return 'Accountant';
+      case 'ADMIN': return 'Administrator';
+      case 'PROJECT_MANAGER': return 'Project Manager';
+      case 'CONTRIBUTOR': return 'Contributor';
+      case 'VIEWER': return 'Viewer';
       default: return role;
     }
   };

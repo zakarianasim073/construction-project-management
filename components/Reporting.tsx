@@ -12,8 +12,12 @@ import {
   ChevronRight, 
   Mail, 
   Share2,
-  Loader2
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface ReportingProps {
   project: ProjectState;
@@ -30,9 +34,209 @@ const Reporting: React.FC<ReportingProps> = ({ project }) => {
     { id: 'STAKEHOLDER_UPDATE', title: 'Executive Stakeholder Update', description: 'High-level summary for directors and clients.', icon: FileBarChart, color: 'bg-purple-50 text-purple-600' },
   ];
 
-  const handleGenerate = (reportId: string) => {
+  const generateDPRSummary = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Daily Progress Summary', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Project: ${project.name}`, 14, 30);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 35);
+
+    const tableData = project.dprs.map(dpr => [
+      dpr.date,
+      dpr.linkedBoqId || 'N/A',
+      dpr.workDoneQty?.toString() || '0',
+      dpr.laborCount.toString(),
+      dpr.remarks
+    ]);
+
+    autoTable(doc, {
+      startY: 45,
+      head: [['Date', 'BOQ ID', 'Work Qty', 'Labor', 'Remarks']],
+      body: tableData,
+    });
+
+    doc.save(`${project.name}_DPR_Summary.pdf`);
+  };
+
+  const generateFinancialHealth = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Financial Health Report', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Project: ${project.name}`, 14, 30);
+
+    const totalRevenue = project.bills.filter(b => b.type === 'CLIENT_RA').reduce((acc, b) => acc + b.amount, 0);
+    const totalExpenses = project.bills.filter(b => b.type !== 'CLIENT_RA').reduce((acc, b) => acc + b.amount, 0);
+    
+    doc.text(`Total Revenue: BDT ${totalRevenue.toLocaleString()}`, 14, 45);
+    doc.text(`Total Expenses: BDT ${totalExpenses.toLocaleString()}`, 14, 52);
+    doc.text(`Net Cash Flow: BDT ${(totalRevenue - totalExpenses).toLocaleString()}`, 14, 59);
+
+    const billData = project.bills.map(b => [
+      b.id,
+      b.entityName,
+      b.type,
+      `BDT ${b.amount.toLocaleString()}`,
+      b.status
+    ]);
+
+    autoTable(doc, {
+      startY: 70,
+      head: [['Bill ID', 'Entity', 'Type', 'Amount', 'Status']],
+      body: billData,
+    });
+
+    doc.save(`${project.name}_Financial_Health.pdf`);
+  };
+
+  const generateBOQReconciliation = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('BOQ Reconciliation Report', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Project: ${project.name}`, 14, 30);
+
+    const boqData = project.boq.map(item => [
+      item.id,
+      item.description.substring(0, 50) + (item.description.length > 50 ? '...' : ''),
+      item.unit,
+      item.plannedQty.toString(),
+      item.executedQty.toString(),
+      `${((item.executedQty / item.plannedQty) * 100).toFixed(1)}%`
+    ]);
+
+    autoTable(doc, {
+      startY: 40,
+      head: [['ID', 'Description', 'Unit', 'Planned', 'Executed', 'Progress']],
+      body: boqData,
+    });
+
+    doc.save(`${project.name}_BOQ_Reconciliation.pdf`);
+  };
+
+  const generateQCSafetyLog = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('QC & Safety Log Report', 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Project: ${project.name}`, 14, 30);
+
+    // Quality Checks
+    doc.setFontSize(14);
+    doc.text('Quality Inspections', 14, 45);
+    const qcData = (project.qualityChecks || []).map(qc => [
+      qc.date,
+      qc.title,
+      qc.location,
+      qc.status,
+      qc.items.filter(i => i.isOk).length + '/' + qc.items.length
+    ]);
+
+    autoTable(doc, {
+      startY: 50,
+      head: [['Date', 'Title', 'Location', 'Status', 'Passed Items']],
+      body: qcData,
+    });
+
+    // Safety Checks
+    const lastY = (doc as any).lastAutoTable.finalY + 15;
+    doc.setFontSize(14);
+    doc.text('Safety Audits', 14, lastY);
+    const safetyData = (project.safetyChecks || []).map(sc => [
+      sc.date,
+      sc.score.toString() + '%',
+      sc.status,
+      sc.hazardsIdentified.length.toString(),
+      sc.correctiveActions.length.toString()
+    ]);
+
+    autoTable(doc, {
+      startY: lastY + 5,
+      head: [['Date', 'Score', 'Status', 'Hazards', 'Actions']],
+      body: safetyData,
+    });
+
+    doc.save(`${project.name}_QC_Safety_Log.pdf`);
+  };
+
+  const generateExecutiveUpdate = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text('Executive Stakeholder Update', 14, 25);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text(`Project: ${project.name}`, 14, 35);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 42);
+
+    // Summary Section
+    doc.setDrawColor(226, 232, 240); // slate-200
+    doc.line(14, 48, 196, 48);
+
+    const totalPlanned = project.boq.reduce((acc, i) => acc + (i.plannedQty * i.rate), 0);
+    const totalExecuted = project.boq.reduce((acc, i) => acc + (i.executedQty * i.rate), 0);
+    const progress = ((totalExecuted / totalPlanned) * 100).toFixed(1);
+
+    doc.setFontSize(14);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Project Summary', 14, 60);
+    
+    doc.setFontSize(11);
+    doc.text(`Overall Progress: ${progress}%`, 14, 70);
+    doc.text(`Contract Value: BDT ${project.contractValue.toLocaleString()}`, 14, 77);
+    doc.text(`Executed Value: BDT ${totalExecuted.toLocaleString()}`, 14, 84);
+    
+    // Milestones
+    doc.setFontSize(14);
+    doc.text('Upcoming Milestones', 14, 100);
+    const milestoneData = project.milestones.slice(0, 5).map(m => [
+      m.title,
+      m.date,
+      m.status
+    ]);
+
+    autoTable(doc, {
+      startY: 105,
+      head: [['Milestone', 'Target Date', 'Status']],
+      body: milestoneData,
+    });
+
+    doc.save(`${project.name}_Executive_Update.pdf`);
+  };
+
+  const handleGenerate = async (reportId: string) => {
     setIsGenerating(reportId);
-    setTimeout(() => setIsGenerating(null), 2000);
+    try {
+      // Small delay for UX
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      switch (reportId) {
+        case 'DPR_SUMMARY':
+          generateDPRSummary();
+          break;
+        case 'FINANCIAL_HEALTH':
+          generateFinancialHealth();
+          break;
+        case 'BOQ_RECONCILIATION':
+          generateBOQReconciliation();
+          break;
+        case 'QC_SAFETY_LOG':
+          generateQCSafetyLog();
+          break;
+        case 'STAKEHOLDER_UPDATE':
+          generateExecutiveUpdate();
+          break;
+        default:
+          alert("This report type is currently being developed.");
+      }
+    } catch (error) {
+      console.error("Report generation failed", error);
+      alert("Failed to generate report.");
+    } finally {
+      setIsGenerating(null);
+    }
   };
 
   return (

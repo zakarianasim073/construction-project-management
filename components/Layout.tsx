@@ -20,7 +20,14 @@ import {
   ShoppingCart,
   ShieldCheck,
   Camera,
-  FileBarChart
+  FileBarChart,
+  History,
+  Truck,
+  Star,
+  FilePlus2,
+  Box,
+  Leaf,
+  Shield
 } from 'lucide-react';
 import { UserRole, User } from '../types';
 import { NotificationCenter } from './Collaboration';
@@ -55,22 +62,32 @@ const Layout: React.FC<LayoutProps> = ({
     { id: 'finance', label: 'Financial Control', icon: DollarSign },
     { id: 'analytics', label: 'Financial Analytics', icon: BarChart3 },
     { id: 'procurement', label: 'Procurement', icon: ShoppingCart },
+    { id: 'equipment', label: 'Equipment & Assets', icon: Truck },
+    { id: 'attendance', label: 'Attendance', icon: Users },
+    { id: 'risks', label: 'AI Risk Assessment', icon: AlertTriangle },
+    { id: 'weather', label: 'Weather Impact', icon: CloudRain },
+    { id: 'change-orders', label: 'Change Orders', icon: FilePlus2 },
     { id: 'subcontractors', label: 'Sub-contractors', icon: Users },
+    { id: 'vendor-performance', label: 'Vendor Ratings', icon: Star },
     { id: 'qc-safety', label: 'QC & Safety', icon: ShieldCheck },
     { id: 'tasks', label: 'Tasks', icon: CheckCircle2 },
     { id: 'gantt', label: 'Timeline', icon: Calendar },
     { id: 'photos', label: 'Photo Logs', icon: Camera },
+    { id: 'bim', label: 'BIM Viewer', icon: Box },
+    { id: 'sustainability', label: 'Sustainability', icon: Leaf },
     { id: 'reports', label: 'Reports', icon: FileBarChart },
+    { id: 'client-portal', label: 'Client Portal', icon: Shield },
+    { id: 'versions', label: 'Versions', icon: History },
     { id: 'team', label: 'Team', icon: Users },
     { id: 'documents', label: 'Documents', icon: FolderOpen },
   ];
 
   const getRoleLabel = (role: string) => {
     switch(role) {
-      case 'DIRECTOR': return 'Project Director';
-      case 'MANAGER': return 'Project Manager';
-      case 'ENGINEER': return 'Site Engineer';
-      case 'ACCOUNTANT': return 'Accountant';
+      case 'ADMIN': return 'Administrator';
+      case 'PROJECT_MANAGER': return 'Project Manager';
+      case 'CONTRIBUTOR': return 'Contributor';
+      case 'VIEWER': return 'Viewer';
       default: return role;
     }
   };

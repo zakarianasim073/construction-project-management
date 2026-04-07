@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import MasterControl from './components/MasterControl';
@@ -444,6 +445,7 @@ const App: React.FC = () => {
        handleAddDPR(newDPR);
        
        await updateDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), { status: 'APPLIED' });
+       handleUpdateProject(activeProjectId, (project) => ({
         ...project,
         aiSuggestions: project.aiSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'APPLIED' as const } : s)
       }));
@@ -677,27 +679,38 @@ const App: React.FC = () => {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-      </div>
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+        </div>
+        <Analytics />
+      </>
     );
   }
 
   if (!user) {
-    return <Auth onUserChange={setUser} />;
+    return (
+      <>
+        <Auth onUserChange={setUser} />
+        <Analytics />
+      </>
+    );
   }
 
   if (!activeProject) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <ProjectList 
-          projects={projects} 
-          onSelectProject={setActiveProjectId} 
-          onCreateProject={handleCreateProject}
-          userRole={user.role}
-          onSwitchRole={() => {}} // Disabled for real users
-        />
-      </div>
+      <>
+        <div className="min-h-screen bg-slate-50">
+          <ProjectList 
+            projects={projects} 
+            onSelectProject={setActiveProjectId} 
+            onCreateProject={handleCreateProject}
+            userRole={user.role}
+            onSwitchRole={() => {}} // Disabled for real users
+          />
+        </div>
+        <Analytics />
+      </>
     );
   }
 
@@ -840,47 +853,50 @@ const App: React.FC = () => {
   };
 
   return (
-    <Layout 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab} 
-      onSwitchProject={() => setActiveProjectId(null)}
-      projectName={enrichedActiveProject?.name || ''}
-      user={{ ...user, role: activeProjectRole || user.role }}
-      onLogout={handleLogout}
-    >
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="flex-1">
-          {renderContent()}
-        </div>
-        
-        {/* Collaboration Sidebar */}
-        <div className="w-full lg:w-80 flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Smartphone className="w-4 h-4 text-emerald-600" />
-              <h4 className="font-bold text-slate-800 text-sm">WhatsApp DPR Simulation</h4>
+    <>
+      <Layout 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onSwitchProject={() => setActiveProjectId(null)}
+        projectName={enrichedActiveProject?.name || ''}
+        user={{ ...user, role: activeProjectRole || user.role }}
+        onLogout={handleLogout}
+      >
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1">
+            {renderContent()}
+          </div>
+          
+          {/* Collaboration Sidebar */}
+          <div className="w-full lg:w-80 flex flex-col gap-6">
+            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Smartphone className="w-4 h-4 text-emerald-600" />
+                <h4 className="font-bold text-slate-800 text-sm">WhatsApp DPR Simulation</h4>
+              </div>
+              <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
+                Paste a message from your site WhatsApp group to automatically extract progress data.
+              </p>
+              <textarea
+                placeholder="e.g. Today we completed 50sqm of brickwork at block A. 5 masons were present."
+                value={whatsappMessage}
+                onChange={(e) => setWhatsappMessage(e.target.value)}
+                className="w-full p-3 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none mb-3"
+              />
+              <button
+                onClick={handleSimulateWhatsApp}
+                disabled={isSimulatingWhatsApp || !whatsappMessage.trim()}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
+              >
+                {isSimulatingWhatsApp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Process Message
+              </button>
             </div>
-            <p className="text-[10px] text-slate-500 mb-3 leading-relaxed">
-              Paste a message from your site WhatsApp group to automatically extract progress data.
-            </p>
-            <textarea
-              placeholder="e.g. Today we completed 50sqm of brickwork at block A. 5 masons were present."
-              value={whatsappMessage}
-              onChange={(e) => setWhatsappMessage(e.target.value)}
-              className="w-full p-3 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none mb-3"
-            />
-            <button
-              onClick={handleSimulateWhatsApp}
-              disabled={isSimulatingWhatsApp || !whatsappMessage.trim()}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-all disabled:opacity-50"
-            >
-              {isSimulatingWhatsApp ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-              Process Message
-            </button>
           </div>
         </div>
-      </div>
-    </Layout>
+      </Layout>
+      <Analytics />
+    </>
   );
 };
 

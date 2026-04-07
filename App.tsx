@@ -46,6 +46,8 @@ const App: React.FC = () => {
   const [activeProjectRole, setActiveProjectRole] = useState<UserRole | null>(null);
   const [activeProjectTasks, setActiveProjectTasks] = useState<Task[]>([]);
   const [activeProjectMembers, setActiveProjectMembers] = useState<User[]>([]);
+  const [activeProjectDocuments, setActiveProjectDocuments] = useState<ProjectDocument[]>([]);
+  const [activeProjectSuggestions, setActiveProjectSuggestions] = useState<AiSuggestion[]>([]);
   const [isSimulatingWhatsApp, setIsSimulatingWhatsApp] = useState(false);
   const [whatsappMessage, setWhatsappMessage] = useState('');
   const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
@@ -82,8 +84,8 @@ const App: React.FC = () => {
       const fetchedProjects = snapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id,
-        aiSuggestions: doc.data().aiSuggestions || [],
-        documents: doc.data().documents || [],
+        aiSuggestions: [], // Managed via subcollection listener
+        documents: [], // Managed via subcollection listener
         dprs: doc.data().dprs || [],
         boq: doc.data().boq || [],
         materials: doc.data().materials || [],
@@ -201,7 +203,46 @@ const App: React.FC = () => {
     return () => unsubscribe();
   }, [activeProjectId]);
 
+  // Active Project Documents Listener
+  useEffect(() => {
+    if (!activeProjectId) {
+      setActiveProjectDocuments([]);
+      return;
+    }
+    const q = query(collection(db, `projects/${activeProjectId}/documents`), orderBy('uploadDate', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as ProjectDocument[];
+      setActiveProjectDocuments(docs);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `projects/${activeProjectId}/documents`);
+    });
+    return () => unsubscribe();
+  }, [activeProjectId]);
+
+  // Active Project AI Suggestions Listener
+  useEffect(() => {
+    if (!activeProjectId) {
+      setActiveProjectSuggestions([]);
+      return;
+    }
+    const q = collection(db, `projects/${activeProjectId}/aiSuggestions`);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const suggestions = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as AiSuggestion[];
+      setActiveProjectSuggestions(suggestions);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, `projects/${activeProjectId}/aiSuggestions`);
+    });
+    return () => unsubscribe();
+  }, [activeProjectId]);
+
   const activeProject = projects.find(p => p.id === activeProjectId);
+  
+  // Merge subcollection data into activeProject for components
+  const enrichedActiveProject = activeProject ? {
+    ...activeProject,
+    documents: activeProjectDocuments,
+    aiSuggestions: activeProjectSuggestions
+  } : null;
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -256,49 +297,60 @@ const App: React.FC = () => {
     if (!project) return;
     
     const updated = updater(project);
+    // Remove subcollection arrays from the main document update
+    const { documents, aiSuggestions, ...mainData } = updated as any;
+    
     try {
-      await updateDoc(doc(db, 'projects', projectId), updated as any);
+      await updateDoc(doc(db, 'projects', projectId), mainData);
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `projects/${projectId}`);
     }
   };
 
   const handleAddDocument = async (newDoc: ProjectDocument) => {
-    if (!activeProjectId || !activeProject) return;
+    if (!activeProjectId || !enrichedActiveProject) return;
     
-    // 1. Add Document immediately
-    handleUpdateProject(activeProjectId, (project) => ({
-      ...project,
-      documents: [newDoc, ...project.documents]
-    }));
-
-    // 2. Trigger Auto-Analysis based on Doc Type
     try {
+      // 1. Add Document to subcollection
+      await setDoc(doc(db, 'projects', activeProjectId, 'documents', newDoc.id), newDoc);
+
+      // 2. Trigger Auto-Analysis based on Doc Type
       let mimeType = 'application/pdf';
       if (newDoc.type === 'JPG' || newDoc.type === 'PNG') mimeType = 'image/jpeg';
 
-      const suggestions = await analyzeDocumentContent(newDoc.name, newDoc.category, activeProject.boq, newDoc.content, mimeType);
+      const suggestions = await analyzeDocumentContent(newDoc.name, newDoc.category, enrichedActiveProject.boq, newDoc.content, mimeType);
       
       if (suggestions && suggestions.length > 0) {
-        handleUpdateProject(activeProjectId, (project) => ({
-          ...project,
-          documents: project.documents.map(d => d.id === newDoc.id ? { ...d, isAnalyzed: true } : d),
-          aiSuggestions: [...suggestions.map(s => ({ ...s, docId: newDoc.id })), ...project.aiSuggestions]
-        }));
+        // Update document status
+        await updateDoc(doc(db, 'projects', activeProjectId, 'documents', newDoc.id), { isAnalyzed: true });
+        
+        // Add suggestions to subcollection
+        for (const s of suggestions) {
+          const suggestionId = `SUG-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+          await setDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), {
+            ...s,
+            id: suggestionId,
+            docId: newDoc.id
+          });
+        }
       }
     } catch (e) {
-      console.error("Auto-analysis failed", e);
+      console.error("Auto-analysis or upload failed", e);
+      handleFirestoreError(e, OperationType.CREATE, `projects/${activeProjectId}/documents/${newDoc.id}`);
     }
   };
 
-  const handleAnalyzeDocument = (docId: string, suggestions: AiSuggestion[]) => {
+  const handleAnalyzeDocument = async (docId: string, suggestions: AiSuggestion[]) => {
     if (!activeProjectId) return;
-    handleUpdateProject(activeProjectId, (project) => ({
-      ...project,
-      documents: project.documents.map(d => d.id === docId ? { ...d, isAnalyzed: true } : d),
-      aiSuggestions: [...suggestions, ...project.aiSuggestions]
-    }));
-    setActiveTab('dashboard'); // Switch to dashboard to see results
+    try {
+      await updateDoc(doc(db, 'projects', activeProjectId, 'documents', docId), { isAnalyzed: true });
+      for (const s of suggestions) {
+        await setDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', s.id), s);
+      }
+      setActiveTab('dashboard');
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, `projects/${activeProjectId}/documents/${docId}`);
+    }
   };
 
   const handleImportBOQItems = (items: BOQItem[]) => {
@@ -343,22 +395,19 @@ const App: React.FC = () => {
   };
 
   const handleApplySuggestion = async (suggestionId: string) => {
-    if (!activeProjectId || !activeProject) return;
-    const suggestion = activeProject.aiSuggestions.find(s => s.id === suggestionId);
+    if (!activeProjectId || !enrichedActiveProject) return;
+    const suggestion = enrichedActiveProject.aiSuggestions.find(s => s.id === suggestionId);
     if (!suggestion) return;
 
     if (suggestion.type === 'BOQ_IMPORT') {
-      const relatedDoc = activeProject.documents.find(d => d.id === suggestion.docId);
+      const relatedDoc = enrichedActiveProject.documents.find(d => d.id === suggestion.docId);
       if (relatedDoc) {
          let mimeType = 'application/pdf';
          if (relatedDoc.type === 'JPG' || relatedDoc.type === 'PNG') mimeType = 'image/jpeg';
          const items = await parseBOQDocument(relatedDoc.name, relatedDoc.content, mimeType);
          handleImportBOQItems(items);
       }
-      handleUpdateProject(activeProjectId, (project) => ({
-        ...project,
-        aiSuggestions: project.aiSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'APPLIED' as const } : s)
-      }));
+      await updateDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), { status: 'APPLIED' });
       return;
     }
 
@@ -367,7 +416,7 @@ const App: React.FC = () => {
        // Resolve IDs
        let subId = undefined;
        if (dprData.subContractorName) {
-         subId = activeProject.subContractors?.find(s => 
+         subId = enrichedActiveProject.subContractors?.find(s => 
            s.name.toLowerCase().includes(dprData.subContractorName!.toLowerCase())
          )?.id;
        }
@@ -375,7 +424,7 @@ const App: React.FC = () => {
        let materialsUsed = [];
        if (dprData.materials) {
          materialsUsed = dprData.materials.map(m => {
-           const mat = activeProject.materials.find(ex => ex.name.toLowerCase().includes(m.name.toLowerCase()));
+           const mat = enrichedActiveProject.materials.find(ex => ex.name.toLowerCase().includes(m.name.toLowerCase()));
            return mat ? { materialId: mat.id, qty: m.qty } : null;
          }).filter(Boolean) as any;
        }
@@ -394,7 +443,7 @@ const App: React.FC = () => {
        };
        handleAddDPR(newDPR);
        
-       handleUpdateProject(activeProjectId, (project) => ({
+       await updateDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), { status: 'APPLIED' });
         ...project,
         aiSuggestions: project.aiSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'APPLIED' as const } : s)
       }));
@@ -427,12 +476,13 @@ const App: React.FC = () => {
     });
   };
 
-  const handleDismissSuggestion = (suggestionId: string) => {
+  const handleDismissSuggestion = async (suggestionId: string) => {
     if (!activeProjectId) return;
-    handleUpdateProject(activeProjectId, (project) => ({
-      ...project,
-      aiSuggestions: project.aiSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'DISMISSED' as const } : s)
-    }));
+    try {
+      await updateDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), { status: 'DISMISSED' });
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, `projects/${activeProjectId}/aiSuggestions/${suggestionId}`);
+    }
   };
 
   const handleAddDPR = (newDPR: DPR) => {
@@ -595,15 +645,16 @@ const App: React.FC = () => {
   };
 
   const handleSimulateWhatsApp = async () => {
-    if (!activeProjectId || !activeProject || !whatsappMessage.trim()) return;
+    if (!activeProjectId || !enrichedActiveProject || !whatsappMessage.trim()) return;
     
     setIsSimulatingWhatsApp(true);
     try {
-      const extracted = await processWhatsAppMessage(whatsappMessage, activeProject.boq);
+      const extracted = await processWhatsAppMessage(whatsappMessage, enrichedActiveProject.boq);
       if (extracted) {
         // Create an AI Suggestion based on WhatsApp message
+        const suggestionId = `WA-SUG-${Date.now()}`;
         const newSuggestion: AiSuggestion = {
-          id: `WA-SUG-${Date.now()}`,
+          id: suggestionId,
           docId: 'WHATSAPP',
           type: 'DPR_ENTRY',
           title: 'WhatsApp Progress Update',
@@ -612,10 +663,7 @@ const App: React.FC = () => {
           status: 'PENDING'
         };
         
-        handleUpdateProject(activeProjectId, (project) => ({
-          ...project,
-          aiSuggestions: [newSuggestion, ...project.aiSuggestions]
-        }));
+        await setDoc(doc(db, 'projects', activeProjectId, 'aiSuggestions', suggestionId), newSuggestion);
         
         setWhatsappMessage('');
         setActiveTab('dashboard');
@@ -658,7 +706,7 @@ const App: React.FC = () => {
       case 'dashboard':
         return (
           <Dashboard 
-            data={activeProject} 
+            data={enrichedActiveProject!} 
             onApplySuggestion={handleApplySuggestion}
             onDismissSuggestion={handleDismissSuggestion}
             onTabChange={setActiveTab}
@@ -666,7 +714,7 @@ const App: React.FC = () => {
         );
       case 'master':
         return <MasterControl 
-                  data={activeProject} 
+                  data={enrichedActiveProject!} 
                   onAddDocument={handleAddDocument} 
                   onAddBOQItem={handleAddBOQItem} 
                   onUpdateBOQItem={handleUpdateBOQItem} 
@@ -675,7 +723,7 @@ const App: React.FC = () => {
                />;
       case 'site':
         return <SiteExecution 
-                  data={activeProject} 
+                  data={enrichedActiveProject!} 
                   onAddDocument={handleAddDocument} 
                   onAddDPR={handleAddDPR} 
                   onReceiveMaterial={handleReceiveMaterial}
@@ -684,7 +732,7 @@ const App: React.FC = () => {
                />;
       case 'finance':
         return <FinancialControl 
-                 data={activeProject} 
+                 data={enrichedActiveProject!} 
                  onAddDocument={handleAddDocument} 
                  onUpdateBOQItem={handleUpdateBOQItem} 
                  onAddBill={handleAddBill}
@@ -693,65 +741,65 @@ const App: React.FC = () => {
                  userRole={activeProjectRole || user.role} 
                />;
       case 'analytics':
-        return <FinancialAnalytics boq={activeProject.boq} bills={activeProject.bills} />;
+        return <FinancialAnalytics boq={enrichedActiveProject!.boq} bills={enrichedActiveProject!.bills} />;
       case 'procurement':
-        return <Procurement materials={activeProject.materials} purchaseOrders={activeProject.purchaseOrders || []} userRole={activeProjectRole || user.role} />;
+        return <Procurement materials={enrichedActiveProject!.materials} purchaseOrders={enrichedActiveProject!.purchaseOrders || []} userRole={activeProjectRole || user.role} />;
       case 'subcontractors':
-        return <SubcontractorPortal subContractors={activeProject.subContractors} dprs={activeProject.dprs} userRole={activeProjectRole || user.role} />;
+        return <SubcontractorPortal subContractors={enrichedActiveProject!.subContractors} dprs={enrichedActiveProject!.dprs} userRole={activeProjectRole || user.role} />;
       case 'equipment':
-        return <EquipmentManagement project={activeProject} onUpdateEquipment={(equipment) => handleUpdateProject(activeProject.id, (p) => ({ ...p, equipment }))} />;
+        return <EquipmentManagement project={enrichedActiveProject!} onUpdateEquipment={(equipment) => handleUpdateProject(enrichedActiveProject!.id, (p) => ({ ...p, equipment }))} />;
       case 'attendance':
-        return <AttendanceManagement project={activeProject} onUpdateAttendance={(attendance) => handleUpdateProject(activeProject.id, (p) => ({ ...p, attendance }))} />;
+        return <AttendanceManagement project={enrichedActiveProject!} onUpdateAttendance={(attendance) => handleUpdateProject(enrichedActiveProject!.id, (p) => ({ ...p, attendance }))} />;
       case 'risks':
-        return <RiskAssessmentDashboard project={activeProject} onUpdateRisks={(riskAssessments) => handleUpdateProject(activeProject.id, (p) => ({ ...p, riskAssessments }))} />;
+        return <RiskAssessmentDashboard project={enrichedActiveProject!} onUpdateRisks={(riskAssessments) => handleUpdateProject(enrichedActiveProject!.id, (p) => ({ ...p, riskAssessments }))} />;
       case 'weather':
-        return <WeatherImpact project={activeProject} />;
+        return <WeatherImpact project={enrichedActiveProject!} />;
       case 'change-orders':
-        return <ChangeOrderManagement project={activeProject} onUpdateChangeOrders={(changeOrders) => handleUpdateProject(activeProject.id, (p) => ({ ...p, changeOrders }))} />;
+        return <ChangeOrderManagement project={enrichedActiveProject!} onUpdateChangeOrders={(changeOrders) => handleUpdateProject(enrichedActiveProject!.id, (p) => ({ ...p, changeOrders }))} />;
       case 'sustainability':
-        return <SustainabilityTracker project={activeProject} onUpdateWaste={(wasteLogs) => handleUpdateProject(activeProject.id, (p) => ({ ...p, wasteLogs }))} />;
+        return <SustainabilityTracker project={enrichedActiveProject!} onUpdateWaste={(wasteLogs) => handleUpdateProject(enrichedActiveProject!.id, (p) => ({ ...p, wasteLogs }))} />;
       case 'vendor-performance':
-        return <VendorPerformance project={activeProject} />;
+        return <VendorPerformance project={enrichedActiveProject!} />;
       case 'bim':
-        return <BIMViewer project={activeProject} />;
+        return <BIMViewer project={enrichedActiveProject!} />;
       case 'client-portal':
-        return <ClientPortal project={activeProject} />;
+        return <ClientPortal project={enrichedActiveProject!} />;
       case 'qc-safety':
-        return <QCSafety qualityChecks={activeProject.qualityChecks || []} safetyChecks={activeProject.safetyChecks || []} users={activeProjectMembers} />;
+        return <QCSafety qualityChecks={enrichedActiveProject!.qualityChecks || []} safetyChecks={enrichedActiveProject!.safetyChecks || []} users={activeProjectMembers} />;
       case 'gantt':
         return <GanttChart tasks={activeProjectTasks} />;
       case 'photos':
-        return <PhotoLogs photoLogs={activeProject.photoLogs || []} users={activeProjectMembers} />;
+        return <PhotoLogs photoLogs={enrichedActiveProject!.photoLogs || []} users={activeProjectMembers} />;
       case 'reports':
-        return <Reporting project={activeProject} />;
+        return <Reporting project={enrichedActiveProject!} />;
       case 'versions':
         return (
           <ProjectVersions 
-            projectId={activeProject.id} 
-            currentProject={activeProject} 
+            projectId={enrichedActiveProject!.id} 
+            currentProject={enrichedActiveProject!} 
             userRole={activeProjectRole || user.role}
             onRestore={handleRestoreVersion}
           />
         );
       case 'liability':
-        return <LiabilityTracker data={activeProject} onAddDocument={handleAddDocument} userRole={activeProjectRole || user.role} />;
+        return <LiabilityTracker data={enrichedActiveProject!} onAddDocument={handleAddDocument} userRole={activeProjectRole || user.role} />;
       case 'documents':
         return (
           <div className="h-[calc(100vh-8rem)] flex gap-6">
             <div className="flex-1">
               <DocumentManager 
-                documents={activeProject.documents} 
+                documents={enrichedActiveProject!.documents} 
                 onAddDocument={handleAddDocument} 
                 onAnalyzeDocument={handleAnalyzeDocument}
                 onSelectDocument={setSelectedDocId}
-                boqItems={activeProject.boq}
+                boqItems={enrichedActiveProject!.boq}
                 allowUpload={(activeProjectRole || user.role) === 'ADMIN' || (activeProjectRole || user.role) === 'PROJECT_MANAGER' || (activeProjectRole || user.role) === 'CONTRIBUTOR'}
               />
             </div>
             {selectedDocId && (
               <div className="w-80 h-full">
                 <CommentSection 
-                  projectId={activeProject.id}
+                  projectId={enrichedActiveProject!.id}
                   targetId={selectedDocId}
                   targetType="DOCUMENT"
                   currentUser={user}
@@ -764,7 +812,7 @@ const App: React.FC = () => {
         return (
           <div className="h-[calc(100vh-8rem)]">
             <TaskManager 
-              projectId={activeProject.id}
+              projectId={enrichedActiveProject!.id}
               currentUser={user}
             />
           </div>
@@ -773,8 +821,8 @@ const App: React.FC = () => {
         return (
           <div className="h-[calc(100vh-8rem)]">
             <MemberManager 
-              projectId={activeProject.id}
-              ownerUid={activeProject.ownerUid}
+              projectId={enrichedActiveProject!.id}
+              ownerUid={enrichedActiveProject!.ownerUid}
               currentUserUid={user.uid || ''}
             />
           </div>
@@ -782,7 +830,7 @@ const App: React.FC = () => {
       default:
         return (
           <Dashboard 
-            data={activeProject} 
+            data={enrichedActiveProject!} 
             onApplySuggestion={handleApplySuggestion} 
             onDismissSuggestion={handleDismissSuggestion} 
             onTabChange={setActiveTab}
@@ -796,7 +844,7 @@ const App: React.FC = () => {
       activeTab={activeTab} 
       setActiveTab={setActiveTab} 
       onSwitchProject={() => setActiveProjectId(null)}
-      projectName={activeProject.name}
+      projectName={enrichedActiveProject?.name || ''}
       user={{ ...user, role: activeProjectRole || user.role }}
       onLogout={handleLogout}
     >

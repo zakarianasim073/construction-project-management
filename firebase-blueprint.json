@@ -123,6 +123,22 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "recipientUid", "title", "message", "isRead"]
+    },
+    "AiSuggestion": {
+      "title": "AI Suggestion",
+      "description": "AI-generated suggestion for project data updates",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "docId": { "type": "string" },
+        "type": { "type": "string", "enum": ["QUANTITY_UPDATE", "BILL_DETECTION", "RISK_ALERT", "BOQ_IMPORT", "DPR_ENTRY"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "value": { "type": "object" },
+        "linkedId": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPLIED", "DISMISSED"] }
+      },
+      "required": ["id", "docId", "type", "title", "status"]
     }
   },
   "firestore": {
@@ -131,6 +147,7 @@
     "/projects/{projectId}/members/{memberUid}": { "schema": "ProjectMember", "description": "Project members and their roles" },
     "/projects/{projectId}/tasks/{taskId}": { "schema": "Task", "description": "Project tasks" },
     "/projects/{projectId}/documents/{docId}": { "schema": "ProjectDocument", "description": "Project documents" },
+    "/projects/{projectId}/aiSuggestions/{suggestionId}": { "schema": "AiSuggestion", "description": "AI-generated suggestions" },
     "/projects/{projectId}/versions/{versionId}": { "schema": "ProjectVersion", "description": "Project snapshots/versions" },
     "/projects/{projectId}/comments/{commentId}": { "schema": "Comment", "description": "Comments on project entities" },
     "/users/{uid}/notifications/{notifId}": { "schema": "Notification", "description": "User-specific notifications" }

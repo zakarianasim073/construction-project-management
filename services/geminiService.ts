@@ -36,7 +36,7 @@ export const generateProjectInsights = async (projectData: ProjectState): Promis
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
     });
     return response.text || "No insights generated.";
@@ -103,7 +103,7 @@ export const analyzeDocumentContent = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: { parts },
       config: {
         responseMimeType: "application/json",
@@ -166,7 +166,7 @@ export const suggestPlannedUnitCost = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -216,14 +216,14 @@ export const suggestActualCostBreakdown = async (
     Labor: ৳${plannedBreakdown?.labor || 'N/A'}, 
     Equipment: ৳${plannedBreakdown?.equipment || 'N/A'}, 
     Overhead: ৳${plannedBreakdown?.overhead || 'N/A'}.
-
+ 
     Decompose the Total Actual Unit Cost (৳${actualUnitCost}) into Material, Labor, Equipment, and Overhead based on industry standards for this type of work.
     The SUM of these four components MUST equal EXACTLY ${actualUnitCost}.
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -268,7 +268,7 @@ export const suggestDocumentMetadata = async (fileName: string, userRole: string
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -328,7 +328,7 @@ export const extractDPRData = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: { parts },
       config: {
         responseMimeType: "application/json",
@@ -390,7 +390,7 @@ export const extractBillData = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: { parts },
       config: {
         responseMimeType: "application/json",
@@ -430,7 +430,7 @@ export const parseRunningBillDetails = async (docName: string, boqItems: BOQItem
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -488,7 +488,7 @@ export const processWhatsAppMessage = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -559,7 +559,7 @@ export const parseBOQDocument = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: { parts },
       config: {
         responseMimeType: "application/json",
@@ -636,7 +636,7 @@ export const generateRiskAssessment = async (projectData: ProjectState): Promise
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         responseMimeType: "application/json",

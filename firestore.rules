@@ -130,6 +130,13 @@ service cloud.firestore {
         allow delete: if isProjectAdmin(projectId);
       }
 
+      match /aiSuggestions/{suggestionId} {
+        allow read: if isProjectViewer(projectId);
+        allow create: if isProjectContributor(projectId) && hasRequiredFields(['id', 'docId', 'type', 'title', 'status']);
+        allow update: if isProjectContributor(projectId);
+        allow delete: if isProjectAdmin(projectId);
+      }
+
       match /versions/{versionId} {
         allow read: if isProjectViewer(projectId);
         allow create: if isProjectAdmin(projectId) && hasRequiredFields(['id', 'projectId', 'versionName', 'snapshot', 'createdBy', 'createdAt']);

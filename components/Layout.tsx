@@ -27,7 +27,8 @@ import {
   FilePlus2,
   Box,
   Leaf,
-  Shield
+  Shield,
+  CloudRain
 } from 'lucide-react';
 import { UserRole, User } from '../types';
 import { NotificationCenter } from './Collaboration';

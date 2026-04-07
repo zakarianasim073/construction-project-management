@@ -4,250 +4,73 @@ import { ProjectState, Unit } from './types';
 export const MOCK_PROJECTS: ProjectState[] = [
   {
     id: 'P001',
-    name: "Bank Protective Work at Munshirhat, Gaibandha (BWDB)",
+    name: "River bank protection work from km 11.184 to km 11.484 (Bhola O&M Division-1)",
     ownerUid: 'system',
     memberUids: ['system'],
     status: 'ACTIVE',
     priority: 'HIGH',
-    contractValue: 181592188,
-    startDate: "2023-09-25",
-    endDate: "2026-03-28",
+    contractValue: 276947590.738,
+    startDate: "2024-12-23",
+    endDate: "2026-06-30",
     materials: [
-      { id: 'MAT-01', name: 'Portland Composite Cement', unit: Unit.BAG, totalReceived: 5000, totalConsumed: 4200, currentStock: 800, averageRate: 540, pdRemarks: 'Ensure Holcim brand for casting' },
-      { id: 'MAT-02', name: 'Sylhet Sand (FM 2.5)', unit: Unit.CFT, totalReceived: 20000, totalConsumed: 15000, currentStock: 5000, averageRate: 45 },
-      { id: 'MAT-03', name: 'Stone Chips (3/4")', unit: Unit.CFT, totalReceived: 35000, totalConsumed: 28000, currentStock: 7000, averageRate: 185 },
-      { id: 'MAT-04', name: 'Geo-Textile Bags', unit: Unit.NOS, totalReceived: 50000, totalConsumed: 20404, currentStock: 29596, averageRate: 28 }
+      { id: 'MAT-01', name: 'Portland Composite Cement', unit: Unit.BAG, totalReceived: 6937, totalConsumed: 6534, currentStock: 403, averageRate: 550, pdRemarks: 'Consumption tracking as per DPR' },
+      { id: 'MAT-02', name: 'Sylhet Sand (FM 1.5)', unit: Unit.CFT, totalReceived: 35015, totalConsumed: 32488, currentStock: 2527, averageRate: 48 },
+      { id: 'MAT-03', name: 'Stone Chips (40mm down)', unit: Unit.CFT, totalReceived: 49823, totalConsumed: 48107, currentStock: 1716, averageRate: 195 },
+      { id: 'MAT-04', name: 'Geo-Textile Bags (1200x950mm)', unit: Unit.NOS, totalReceived: 70000, totalConsumed: 68510, currentStock: 1490, averageRate: 424 }
     ],
     subContractors: [
       { 
         id: 'SC-01', 
-        name: 'Sweet Chairman', 
-        specialization: 'Earth Work & Geo-Bag', 
-        totalWorkValue: 450000, 
-        totalBilled: 155762, 
-        currentLiability: 294238, 
+        name: 'M/S. Hasan & Brothers', 
+        specialization: 'Main Contractor', 
+        totalWorkValue: 18683412, 
+        totalBilled: 15000684, 
+        currentLiability: 3682728, 
         agreedRates: [
-          { boqId: '40-370-20', rate: 45.00 }, // Dumping Geo-bag labor rate
-          { boqId: '40-920', rate: 30.00 } // Earth work labor rate
-        ],
-        pdRemarks: 'Hold 10% retention from next bill.'
-      },
-      { 
-        id: 'SC-02', 
-        name: 'M/S Rahman Enterprise', 
-        specialization: 'CC Block Casting', 
-        totalWorkValue: 1200000, 
-        totalBilled: 1000000, 
-        currentLiability: 200000, 
-        agreedRates: [
-          { boqId: '40-190-35', rate: 65.00 }, // Block casting labor rate
+          { boqId: '10', rate: 990.001 },
+          { boqId: '11', rate: 1935.001 },
+          { boqId: '13', rate: 676.801 }
         ]
       }
     ],
     boq: [
-      { 
-        id: '40-920', 
-        description: 'Earth work in cutting and filling of eroded bank', 
-        unit: Unit.CUM, 
-        rate: 123.59, 
-        plannedUnitCost: 105.00,
-        plannedBreakdown: { material: 50, labor: 30, equipment: 20, overhead: 5 },
-        plannedQty: 27977, 
-        executedQty: 27977,
-        billedAmount: 3000000, // Partial billing
-        priority: 'MEDIUM',
-        costAnalysis: {
-          unitCost: 115.00,
-          breakdown: { material: 80, labor: 25, equipment: 10, overhead: 0 }
-        }
-      },
-      { 
-        id: '40-370-20', 
-        description: 'Supply, Filling and Dumping of Geo-bag', 
-        unit: Unit.NOS, 
-        rate: 295.00, 
-        plannedUnitCost: 250.00,
-        plannedBreakdown: { material: 200, labor: 30, equipment: 15, overhead: 5 },
-        plannedQty: 20404, 
-        executedQty: 20404,
-        billedAmount: 6019180, // Fully billed
-        priority: 'HIGH',
-        costAnalysis: {
-          unitCost: 280.00,
-          breakdown: { material: 220, labor: 40, equipment: 10, overhead: 10 }
-        }
-      },
-      { 
-        id: '40-190-35', 
-        description: 'CC blocks(1:2.5:5): 40cm x 40cm x 40cm', 
-        unit: Unit.NOS, 
-        rate: 852.00, 
-        plannedUnitCost: 800.00,
-        plannedBreakdown: { material: 550, labor: 150, equipment: 70, overhead: 30 },
-        plannedQty: 47000, 
-        executedQty: 18896,
-        billedAmount: 12000000,
-        priority: 'HIGH',
-        costAnalysis: {
-          unitCost: 910.00,
-          breakdown: { material: 600, labor: 200, equipment: 80, overhead: 30 }
-        }
-      },
-      { 
-        id: '40-190-50', 
-        description: 'CC blocks(1:2.5:5): 30cm x 30cm x 30cm', 
-        unit: Unit.NOS, 
-        rate: 362.00, 
-        plannedUnitCost: 310.00,
-        plannedBreakdown: { material: 180, labor: 100, equipment: 20, overhead: 10 },
-        plannedQty: 70370, 
-        executedQty: 32049,
-        billedAmount: 11000000,
-        priority: 'MEDIUM',
-        costAnalysis: {
-          unitCost: 330.00, 
-          breakdown: { material: 200, labor: 100, equipment: 20, overhead: 10 }
-        }
-      },
-      { 
-        id: '40-190-40', 
-        description: 'CC blocks(1:2.5:5): 40cm x 40cm x 20cm', 
-        unit: Unit.NOS, 
-        rate: 432.00, 
-        plannedUnitCost: 380.00,
-        plannedBreakdown: { material: 250, labor: 100, equipment: 20, overhead: 10 },
-        plannedQty: 118260, 
-        executedQty: 15344,
-        billedAmount: 0,
-        priority: 'LOW',
-        costAnalysis: {
-          unitCost: 400.00,
-          breakdown: { material: 280, labor: 100, equipment: 10, overhead: 10 }
-        }
-      },
-      { 
-        id: '40-290-10', 
-        description: 'Dumping of stone/boulders/blocks by boat: Within 200m', 
-        unit: Unit.CUM, 
-        rate: 1638.00, 
-        plannedUnitCost: 1450.00,
-        plannedBreakdown: { material: 1100, labor: 250, equipment: 100, overhead: 0 },
-        plannedQty: 3926.39, 
-        executedQty: 981.60,
-        billedAmount: 0,
-        priority: 'MEDIUM',
-        costAnalysis: {
-          unitCost: 1400.00,
-          breakdown: { material: 1000, labor: 300, equipment: 100, overhead: 0 }
-        }
-      },
-      { 
-        id: '40-500-40', 
-        description: 'Supply and laying geotex filter', 
-        unit: Unit.SQM, 
-        rate: 202.00, 
-        plannedUnitCost: 175.00,
-        plannedBreakdown: { material: 140, labor: 35, equipment: 0, overhead: 0 },
-        plannedQty: 24187.50, 
-        executedQty: 12500,
-        billedAmount: 2000000,
-        priority: 'LOW',
-        costAnalysis: {
-          unitCost: 180.00,
-          breakdown: { material: 150, labor: 30, equipment: 0, overhead: 0 }
-        }
-      },
+      { id: '1', description: 'Site preparation by manually removing all miscellaneous objectional materials', unit: Unit.SQM, rate: 32.001, plannedUnitCost: 28.00, plannedQty: 18000, executedQty: 18000, billedAmount: 576018, priority: 'MEDIUM' },
+      { id: '2', description: 'Bench Mark Pillar: Manufacturing, supplying & fixing in position RCC (1:2:4)', unit: Unit.NOS, rate: 1321.001, plannedUnitCost: 1100.00, plannedQty: 3, executedQty: 3, billedAmount: 3963, priority: 'LOW' },
+      { id: '3', description: 'Earth work by manual labour with clayey soil (min 30% clay)', unit: Unit.CUM, rate: 203.001, plannedUnitCost: 180.00, plannedQty: 1560, executedQty: 1560, billedAmount: 316681, priority: 'MEDIUM' },
+      { id: '4', description: 'Earth work in cutting and filling of eroded bank of river', unit: Unit.CUM, rate: 211.001, plannedUnitCost: 190.00, plannedQty: 2590.97, executedQty: 2590.97, billedAmount: 546697, priority: 'MEDIUM' },
+      { id: '10', description: 'CC blocks (1:3:5.5): 40cm x 40cm x 40cm', unit: Unit.NOS, rate: 990.001, plannedUnitCost: 850.00, plannedQty: 78319, executedQty: 7167, billedAmount: 4659934, priority: 'HIGH' },
+      { id: '11', description: 'CC blocks (1:3:5.5): 50cm x 50cm x 50cm', unit: Unit.NOS, rate: 1935.001, plannedUnitCost: 1700.00, plannedQty: 57070, executedQty: 8213, billedAmount: 9868505, priority: 'HIGH' },
+      { id: '13', description: 'Dumping with Barge [Geo-bag] (1200mmx950mm)', unit: Unit.NOS, rate: 676.801, plannedUnitCost: 600.00, plannedQty: 68510, executedQty: 6250, billedAmount: 4230006, priority: 'HIGH' }
     ],
     dprs: [
-      { id: '105', date: '2024-11-19', activity: 'CC Block Manufacturing (Package-Munshirhat 01)', location: 'Casting Yard', laborCount: 30, remarks: 'Produced 97 nos 50x50x50 and 246 nos 40x40x40 blocks.', linkedBoqId: '40-190-35', subContractorId: 'SC-02', workDoneQty: 97, materialsUsed: [{ materialId: 'MAT-01', qty: 138 }, { materialId: 'MAT-02', qty: 250 }] },
-      { id: '106', date: '2024-11-19', activity: 'Geo-Bag Dumping by Boat', location: 'River Bank', laborCount: 19, remarks: 'Cumulative dumping progress 46.87%', linkedBoqId: '40-370-20', subContractorId: 'SC-01', workDoneQty: 150 },
-      { id: '107', date: '2024-12-30', activity: 'Monthly Reconciliation', location: 'Site Office', laborCount: 4, remarks: 'Gaibandha Munshirhat Block Casting Work Done Vol: 103385 cft' },
+      { id: 'DPR-001', date: '2026-03-13', activity: 'Block Manufacturing (M-01)', location: 'Casting Yard', laborCount: 26, remarks: 'Produced 244 nos 50x50x50 and 101 nos 40x40x40 blocks.', linkedBoqId: '11', subContractorId: 'SC-01', workDoneQty: 244, materialsUsed: [{ materialId: 'MAT-01', qty: 171 }, { materialId: 'MAT-03', qty: 1716 }] },
+      { id: 'DPR-002', date: '2026-03-01', activity: 'Geo-bag Dumping', location: 'River Bank', laborCount: 15, remarks: 'Running account bill measurement entry.', linkedBoqId: '13', subContractorId: 'SC-01', workDoneQty: 6250 }
     ],
     bills: [
-      { id: 'RA-08', type: 'CLIENT_RA', entityName: 'BWDB Gaibandha O&M Division', amount: 12500000, date: '2024-10-15', status: 'PAID' },
-      { id: 'RA-09', type: 'CLIENT_RA', entityName: 'BWDB Gaibandha O&M Division', amount: 8599950, date: '2025-04-07', status: 'PENDING' },
-      { id: 'SUP-01', type: 'MATERIAL_EXPENSE', entityName: 'Hassan & Brothers Ltd (Supplier)', amount: 450000, date: '2024-11-20', status: 'PAID' },
-      { id: 'SUP-02', type: 'SUB_CONTRACTOR', entityName: 'Sweet Chairman (Sub-contractor)', amount: 155762, date: '2024-11-19', status: 'PENDING' },
+      { id: '2nd R/A', type: 'CLIENT_RA', entityName: 'BWDB Bhola O&M Division-1', amount: 18683412, date: '2026-03-01', status: 'PAID' },
+      { id: 'NOA-01', type: 'CLIENT_RA', entityName: 'BWDB Bhola O&M Division-1', amount: 276947590, date: '2024-12-08', status: 'PAID' }
     ],
     liabilities: [
-      { id: 'L001', description: 'Security Deposit (Retention 10%)', type: 'RETENTION', amount: 1250000, dueDate: '2026-03-28' },
-      { id: 'L002', description: 'Pending PO - Stone Chips (Sylhet)', type: 'PENDING_PO', amount: 867802, dueDate: '2024-12-01' },
-      { id: 'L003', description: 'Unbilled Labor (Nov)', type: 'UNBILLED_WORK', amount: 45000, dueDate: '2024-12-05' },
+      { id: 'L001', description: 'Retention Money (5%)', type: 'RETENTION', amount: 934170, dueDate: '2026-06-30' },
+      { id: 'L002', description: 'Unbilled Work (Current Month)', type: 'UNBILLED_WORK', amount: 3682728, dueDate: '2026-04-30' }
     ],
     milestones: [
-      { id: 'M1', title: 'Site Mobilization', date: '2023-10-01', status: 'COMPLETED', description: 'Site office setup and initial equipment deployment' },
-      { id: 'M2', title: 'Geo-Bag Dumping Completion', date: '2024-12-30', status: 'COMPLETED', description: 'Primary river bank protection layer' },
-      { id: 'M3', title: 'CC Block Casting (50%)', date: '2025-06-01', status: 'AT_RISK', description: 'Target 50% of total block volume cast' },
-      { id: 'M4', title: 'Pre-Monsoon Protection', date: '2025-05-15', status: 'PENDING', description: 'Critical protection works before water level rise' }
+      { id: 'M1', title: 'Contract Signing', date: '2025-01-05', status: 'COMPLETED', description: 'Formal agreement signed after NOA' },
+      { id: 'M2', title: 'Site Mobilization', date: '2024-12-23', status: 'COMPLETED', description: 'Commencement of work' },
+      { id: 'M3', title: '50% Block Casting', date: '2025-10-15', status: 'COMPLETED', description: 'Reached halfway mark for CC blocks' },
+      { id: 'M4', title: 'Project Completion', date: '2026-06-30', status: 'PENDING', description: 'Final handover' }
     ],
     documents: [
-      { id: 'D001', name: 'Running Bill RA-09.pdf', type: 'PDF', category: 'BILL', module: 'FINANCE', uploadDate: '2025-04-07', size: '1.4 MB' },
-      { id: 'D002', name: 'Daily Progress Report_19.11.25.pdf', type: 'PDF', category: 'REPORT', module: 'SITE', uploadDate: '2024-11-19', size: '2.1 MB' },
-      { id: 'D003', name: 'Profit_Loss_Summary_30.12.2024.xlsx', type: 'XLSX', category: 'REPORT', module: 'FINANCE', uploadDate: '2024-12-30', size: '0.5 MB' },
-      { id: 'D004', name: 'BOQ_Schedule.pdf', type: 'PDF', category: 'CONTRACT', module: 'MASTER', uploadDate: '2023-09-01', size: '3.8 MB' },
+      { id: 'D001', name: 'Notification of Award (NOA).pdf', type: 'PDF', category: 'CONTRACT', module: 'MASTER', uploadDate: '2024-12-08', size: '1.2 MB' },
+      { id: 'D002', name: 'Running Account Bill C.pdf', type: 'PDF', category: 'BILL', module: 'FINANCE', uploadDate: '2026-03-01', size: '2.5 MB' },
+      { id: 'D003', name: 'Daily Progress Report_13.03.26.pdf', type: 'PDF', category: 'REPORT', module: 'SITE', uploadDate: '2026-03-13', size: '0.8 MB' },
+      { id: 'D004', name: 'Bill of Quantities (BOQ).pdf', type: 'PDF', category: 'CONTRACT', module: 'MASTER', uploadDate: '2024-12-08', size: '4.2 MB' }
     ],
     aiSuggestions: [],
-    purchaseOrders: [
-      { id: 'PO-001', materialId: 'MAT-01', vendorName: 'Holcim Cement Ltd.', qty: 2000, rate: 540, totalAmount: 1080000, status: 'DELIVERED', orderDate: '2025-03-10', actualDeliveryDate: '2025-03-15' },
-      { id: 'PO-002', materialId: 'MAT-04', vendorName: 'Geo-Tech Solutions', qty: 10000, rate: 28, totalAmount: 280000, status: 'SENT', orderDate: '2025-04-01', expectedDeliveryDate: '2025-04-10' }
-    ],
-    qualityChecks: [
-      { id: 'QC-01', title: 'Concrete Slump Test', location: 'Block A Casting', inspectorUid: 'system', date: '2025-04-05', status: 'PASSED', items: [{ description: 'Slump value within 75-100mm', isOk: true }, { description: 'Correct water-cement ratio', isOk: true }] },
-      { id: 'QC-02', title: 'Rebar Inspection', location: 'Section 4 Foundation', inspectorUid: 'system', date: '2025-04-06', status: 'PENDING', items: [{ description: 'Correct spacing as per drawing', isOk: true }, { description: 'Rust-free rebar', isOk: false, remarks: 'Minor rust on top layer' }] }
-    ],
-    safetyChecks: [
-      { id: 'S-01', date: '2025-04-01', inspectorUid: 'system', score: 92, hazardsIdentified: ['Loose scaffolding'], correctiveActions: ['Tightened all joints'], status: 'SAFE' },
-      { id: 'S-02', date: '2025-04-06', inspectorUid: 'system', score: 65, hazardsIdentified: ['Missing PPE', 'Open excavation'], correctiveActions: ['Issued warnings', 'Fencing required'], status: 'ACTION_REQUIRED' }
-    ],
-    photoLogs: [
-      { id: 'PH-01', url: 'https://picsum.photos/seed/const1/800/600', caption: 'Foundation pouring at Section A', location: 'Section A', uploadedBy: 'system', createdAt: '2025-04-01T10:00:00Z', tags: ['foundation', 'concrete'] },
-      { id: 'PH-02', url: 'https://picsum.photos/seed/const2/800/600', caption: 'Material delivery - Cement', location: 'Main Store', uploadedBy: 'system', createdAt: '2025-04-05T14:30:00Z', tags: ['delivery', 'cement'] }
-    ],
     equipment: [
-      { id: 'EQ-01', name: 'Caterpillar Excavator 320', type: 'Excavator', status: 'OPERATIONAL', operatorName: 'Rahim Uddin', fuelConsumption: 18, lastMaintenanceDate: '2025-03-01', nextMaintenanceDate: '2025-06-01', location: 'River Bank' },
-      { id: 'EQ-02', name: 'Concrete Mixer Truck', type: 'Mixer', status: 'MAINTENANCE', operatorName: 'Karim Ali', fuelConsumption: 12, lastMaintenanceDate: '2025-04-01', nextMaintenanceDate: '2025-04-15', location: 'Casting Yard' }
+      { id: 'EQ-01', name: 'Mixture Machine M-01', type: 'Mixer', status: 'OPERATIONAL', operatorName: 'Antor', fuelConsumption: 15, lastMaintenanceDate: '2026-02-15', nextMaintenanceDate: '2026-05-15', location: 'Casting Yard' },
+      { id: 'EQ-02', name: 'Mixture Machine M-02', type: 'Mixer', status: 'OPERATIONAL', operatorName: 'Ripon', fuelConsumption: 15, lastMaintenanceDate: '2026-02-20', nextMaintenanceDate: '2026-05-20', location: 'Casting Yard' }
     ],
-    attendance: [
-      { id: 'ATT-01', workerId: 'W-101', workerName: 'Abul Kashem', date: '2025-04-06', checkIn: '08:00 AM', status: 'PRESENT' },
-      { id: 'ATT-02', workerId: 'W-102', workerName: 'Sujon Mia', date: '2025-04-06', checkIn: '08:15 AM', status: 'PRESENT' },
-      { id: 'ATT-03', workerId: 'W-103', workerName: 'Nurul Islam', date: '2025-04-06', checkIn: '08:05 AM', status: 'LEAVE' }
-    ],
-    changeOrders: [
-      { id: 'CO-01', title: 'Additional River Bank Protection', description: 'Extra 50m of geo-bag dumping due to unexpected erosion', requestedBy: 'Site Engineer', requestedDate: '2025-04-02', estimatedCost: 450000, status: 'PENDING', linkedBoqId: '40-370-20' }
-    ],
-    weatherForecast: [
-      { date: '2025-04-07', temp: 32, condition: 'Thunderstorm', precipitationProbability: 85, windSpeed: 25, impactLevel: 'HIGH', suggestedAction: 'Reschedule concrete pouring and secure loose materials.' },
-      { date: '2025-04-08', temp: 30, condition: 'Cloudy', precipitationProbability: 20, windSpeed: 10, impactLevel: 'LOW' }
-    ],
-    riskAssessments: [
-      { id: 'RSK-01', date: '2025-04-06', riskScore: 75, category: 'WEATHER', description: 'Upcoming monsoon season starting earlier than predicted.', mitigationStrategy: 'Accelerate foundation work and stock up on essential materials before river levels rise.', status: 'OPEN' },
-      { id: 'RSK-02', date: '2025-04-06', riskScore: 45, category: 'SUPPLY_CHAIN', description: 'Potential shortage of Sylhet Sand due to local transport strike.', mitigationStrategy: 'Identify alternative suppliers and increase current stock levels.', status: 'OPEN' }
-    ],
-    wasteLogs: [
-      { id: 'WST-01', materialId: 'MAT-01', qty: 15, reason: 'Bag damage during unloading', date: '2025-04-05', carbonFootprintEstimate: 120 },
-      { id: 'WST-02', materialId: 'MAT-04', qty: 50, reason: 'Cutting wastage', date: '2025-04-04', carbonFootprintEstimate: 45 }
-    ]
-  },
-  {
-    id: 'P002',
-    name: "New Construction Project",
-    ownerUid: 'system',
-    memberUids: ['system'],
-    status: 'ACTIVE',
-    priority: 'MEDIUM',
-    contractValue: 0,
-    startDate: "2025-01-01",
-    endDate: "2025-12-31",
-    materials: [],
-    subContractors: [],
-    boq: [],
-    dprs: [],
-    bills: [],
-    liabilities: [],
-    milestones: [],
-    documents: [],
-    aiSuggestions: [],
-    equipment: [],
     attendance: [],
     changeOrders: [],
     weatherForecast: [],

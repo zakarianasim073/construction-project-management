@@ -44,6 +44,23 @@
       },
       "required": ["uid", "name", "role"]
     },
+    "ProjectDocument": {
+      "title": "Project Document",
+      "description": "Metadata for uploaded project documents",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "description": "PDF, JPG, XLSX, etc." },
+        "category": { "type": "string", "enum": ["CONTRACT", "DRAWING", "PERMIT", "REPORT", "BILL", "OTHER"] },
+        "module": { "type": "string", "enum": ["MASTER", "SITE", "FINANCE", "LIABILITY", "GENERAL"] },
+        "uploadDate": { "type": "string", "format": "date" },
+        "size": { "type": "string" },
+        "url": { "type": "string" },
+        "isAnalyzed": { "type": "boolean" }
+      },
+      "required": ["id", "name", "type", "category", "module", "uploadDate"]
+    },
     "ProjectVersion": {
       "title": "Project Version",
       "description": "Snapshot of a project at a specific time",

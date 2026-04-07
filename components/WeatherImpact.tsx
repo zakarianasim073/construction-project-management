@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  CloudRain, 
+  CloudRain,
   Sun, 
   Cloud, 
   Wind, 

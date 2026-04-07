@@ -118,7 +118,24 @@ const App: React.FC = () => {
           });
         });
       } else {
-        setProjects(fetchedProjects);
+        // Keep only the first project as requested
+        const singleProject = fetchedProjects.slice(0, 1);
+        setProjects(singleProject);
+        
+        // Update the first project with document data if it's the mock project ID
+        if (singleProject.length > 0 && singleProject[0].id === 'P001') {
+          const mockData = MOCK_PROJECTS[0];
+          // Check if we need to update (simple name check)
+          if (singleProject[0].name !== mockData.name) {
+             const projectData = { ...mockData, ownerUid: user.uid, memberUids: [user.uid] };
+             updateDoc(doc(db, 'projects', 'P001'), projectData as any);
+          }
+        }
+        
+        // Auto-select the first project if none is active
+        if (singleProject.length > 0 && !activeProjectId) {
+          setActiveProjectId(singleProject[0].id);
+        }
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'projects');

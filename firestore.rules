@@ -41,14 +41,20 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-         (request.auth.token.email == "zmnasim73@gmail.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && (
+        request.auth.token.email == "zmnasim73@gmail.com" || 
+        request.auth.token.email == "z.nasim073@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
     }
 
     function isProjectMember(projectId) {
-      let project = get(/databases/$(database)/documents/projects/$(projectId)).data;
-      return isAuthenticated() && (request.auth.uid in project.memberUids || project.ownerUid == request.auth.uid);
+      return isAuthenticated() && (
+        isAdmin() ||
+        get(/databases/$(database)/documents/projects/$(projectId)).data.ownerUid == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.memberUids
+      );
     }
 
     function getProjectMemberRole(projectId) {
@@ -56,9 +62,9 @@ service cloud.firestore {
     }
 
     function isProjectAdmin(projectId) {
-      let project = get(/databases/$(database)/documents/projects/$(projectId)).data;
       return isAuthenticated() && (
-        project.ownerUid == request.auth.uid || 
+        isAdmin() ||
+        get(/databases/$(database)/documents/projects/$(projectId)).data.ownerUid == request.auth.uid || 
         getProjectMemberRole(projectId) == 'ADMIN' ||
         getProjectMemberRole(projectId) == 'PROJECT_MANAGER'
       );
@@ -94,7 +100,13 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if isProjectViewer(projectId);
+      allow read: if isAuthenticated() && (
+        request.auth.token.email == "zmnasim73@gmail.com" || 
+        request.auth.token.email == "z.nasim073@gmail.com" ||
+        resource.data.ownerUid == request.auth.uid || 
+        request.auth.uid in resource.data.memberUids ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN')
+      );
       allow create: if isAuthenticated() && hasRequiredFields(['id', 'name', 'status', 'ownerUid', 'memberUids']);
       allow update: if isProjectAdmin(projectId);
       allow delete: if isAdmin() || (isAuthenticated() && resource.data.ownerUid == request.auth.uid);
